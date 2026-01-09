@@ -2,9 +2,10 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Pull pre-built image from Docker Hub instead of building locally
+    # Replace <your-dockerhub-username> with your actual Docker Hub username
+    image: dangnam141002/z-ancestor:latest
+    pull_policy: always  # Always pull latest image
     ports:
       - "8080:8080"
     volumes:

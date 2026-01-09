@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Next.js
+.next
+out
+
+# Development files
+.git
+.github
+.vscode
+.idea
+
+# Environment files
+.env.local
+.env.development
+.env.test
+*.env
+
+# Database (local dev)
+*.db
+*.db-journal
+dev.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+DEPLOYMENT.md
+*.md
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Scripts
+scripts/
+check-db.js

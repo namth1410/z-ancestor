@@ -1,5 +1,8 @@
 FROM node:20-alpine AS base
 
+# Enable BuildKit inline cache for CI/CD optimization
+ARG BUILDKIT_INLINE_CACHE=1
+
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
