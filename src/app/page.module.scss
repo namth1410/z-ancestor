@@ -1,0 +1,231 @@
+.main {
+  min-height: 100vh;
+  background-color: var(--background); /* Matches global light theme */
+  color: var(--foreground);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.bgPattern {
+  position: absolute;
+  inset: 0;
+  background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+  opacity: 0.4; /* Increased opacity for light mode texture */
+  pointer-events: none;
+}
+
+.bgGlow1,
+.bgGlow2 {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(100px);
+}
+
+.bgGlow1 {
+  top: 0;
+  left: 0;
+  width: 24rem;
+  height: 24rem;
+  background-color: rgba(251, 191, 36, 0.2); /* amber-400 */
+  border-radius: 9999px;
+}
+
+.bgGlow2 {
+  bottom: 0;
+  right: 0;
+  width: 24rem;
+  height: 24rem;
+  background-color: rgba(244, 63, 94, 0.1); /* rose-500 */
+  border-radius: 9999px;
+}
+
+.header {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 700;
+  font-family: var(--font-serif), serif;
+  letter-spacing: -0.025em;
+  color: #44403c; /* stone-700 */
+  margin-bottom: 1rem;
+
+  @media (min-width: 768px) {
+    font-size: 4.5rem;
+  }
+
+  .highlight {
+    color: var(--primary); /* Brown/Gold from globals */
+  }
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: #78716c; /* stone-500 */
+  font-weight: 400;
+  max-width: 42rem;
+  margin: 0 auto;
+  font-style: italic;
+
+  @media (min-width: 768px) {
+    font-size: 1.25rem;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 72rem;
+  padding: 0 1rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.card {
+  position: relative;
+  height: 20rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.5s, box-shadow 0.5s;
+  display: block;
+  background-color: white; /* Card base is white */
+  border: 1px solid #e7e5e4; /* stone-200 */
+
+  &:hover {
+    transform: translateY(-0.5rem);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: var(--primary);
+
+    .iconWrapper {
+      transform: scale(1.1);
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .cardTitle {
+      color: var(--primary);
+    }
+
+    .cta {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.cardBg {
+  position: absolute;
+  inset: 0;
+  opacity: 0; /* Hidden by default in light mode, or subtle */
+  transition: opacity 0.5s;
+}
+
+/* Gradients can be used as subtle top borders or internal accents instead of full bg */
+.gradientHa {
+  border-top: 4px solid #b45309;
+}
+.gradientTran {
+  border-top: 4px solid #44403c;
+}
+.gradientDao {
+  border-top: 4px solid #9f1239;
+}
+.gradientNgoai {
+  border-top: 4px solid #334155;
+}
+
+.hoverGlow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(to top, rgba(140, 115, 86, 0.1), transparent);
+  transition: opacity 0.5s;
+}
+
+.card:hover .hoverGlow {
+  opacity: 1;
+}
+
+.cardContent {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.iconWrapper {
+  width: 5rem;
+  height: 5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 9999px;
+  border: 1px solid #e7e5e4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.875rem;
+  font-family: var(--font-serif), serif;
+  font-weight: 700;
+  background-color: #f5f5f4; /* stone-100 */
+  color: #57534e; /* stone-600 */
+  transition: all 0.5s;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--font-serif), serif;
+  margin-bottom: 0.5rem;
+  color: #292524; /* stone-800 */
+  transition: color 0.3s;
+}
+
+.cardDesc {
+  font-size: 0.875rem;
+  color: #78716c; /* stone-500 */
+  font-weight: 400;
+}
+
+.cta {
+  position: absolute;
+  bottom: 2rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(1rem);
+  transition: all 0.5s;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.footer {
+  position: absolute;
+  bottom: 1.5rem;
+  color: #a8a29e; /* stone-400 */
+  font-size: 0.75rem;
+  text-align: center;
+}

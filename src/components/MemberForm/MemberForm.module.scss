@@ -1,0 +1,112 @@
+.formContainer {
+  padding: 1.5rem;
+  /* max-height handled by drawer content scrolling, so we can remove strict limit or keep it safe */
+
+  .formGroup {
+    margin-bottom: 1.25rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #57534e; /* stone-600 */
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e7e5e4; /* stone-200 */
+      border-radius: 0.75rem;
+      background-color: #fafaf9; /* stone-50 */
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: #292524; /* stone-800 */
+      transition: all 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: #d6d3d1; /* stone-300 */
+        background-color: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+          0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      }
+
+      &::placeholder {
+        color: #a8a29e; /* stone-400 */
+      }
+    }
+
+    textarea {
+      min-height: 8rem;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2378716c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.75rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+    }
+  }
+
+  .row {
+    display: flex;
+    gap: 1.5rem;
+
+    .col {
+      flex: 1;
+    }
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+
+  .avatarUpload {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #f5f5f4; /* stone-100 */
+    border-radius: 1rem;
+    border: 1px dashed #d6d3d1; /* stone-300 */
+
+    .preview {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 9999px;
+      object-fit: cover;
+      background: #e7e5e4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: #78716c;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e7e5e4;
+
+  button {
+    min-width: 7rem;
+  }
+}

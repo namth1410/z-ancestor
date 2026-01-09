@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      # Named volume - Docker quản lý, data persist khi rebuild
+      - db-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/production.db
+      - ADMIN_PIN=${ADMIN_PIN:-123456}
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+
+volumes:
+  # Named volume cho database
+  db-data:
+    driver: local

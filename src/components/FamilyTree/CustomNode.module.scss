@@ -1,0 +1,106 @@
+.node {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 12px;
+  width: 250px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+    border-color: var(--primary);
+  }
+
+  &.female {
+    border-top: 3px solid #e175b5; // Pink-ish
+  }
+
+  &.male {
+    border-top: 3px solid #63b3ed; // Blue-ish
+  }
+
+  .avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--muted);
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .placeholderAvatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e7e5e4; /* stone-200 */
+    color: #a8a29e; /* stone-400 */
+  }
+
+  .info {
+    flex: 1;
+    overflow: hidden;
+
+    .name {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--foreground);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dates {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+      margin-top: 2px;
+    }
+
+    .role {
+      font-size: 0.75rem;
+      color: var(--primary);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+  }
+
+  .toggleBtn {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: var(--muted-foreground);
+    font-size: 12px;
+    z-index: 10;
+
+    &:hover {
+      background: var(--muted);
+      color: var(--foreground);
+    }
+  }
+}
+
+.handle {
+  background: #a8a29e !important; /* stone-400 */
+  width: 8px;
+  height: 8px;
+}

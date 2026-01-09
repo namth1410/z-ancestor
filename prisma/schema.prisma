@@ -1,0 +1,42 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Member {
+  id          String    @id @default(uuid())
+  firstName   String
+  lastName    String
+  // Tên đầy đủ sẽ được nối từ họ và tên khi hiển thị
+  
+  gender      String    // "male" | "female"
+  birthDate   DateTime?
+  deathDate   DateTime?
+  birthPlace  String?
+  avatar      String?   // Đường dẫn ảnh
+  bio         String?
+  occupation  String?
+  address     String?
+  
+  // Quan hệ
+  fatherId    String?
+  motherId    String?
+  spouseId    String?
+  
+  // Self-relations
+  father      Member?   @relation("FatherChild", fields: [fatherId], references: [id])
+  children    Member[]  @relation("FatherChild")
+  
+  mother      Member?   @relation("MotherChild", fields: [motherId], references: [id])
+  mchildren   Member[]  @relation("MotherChild")
+
+  spouse      Member?   @relation("Spouse", fields: [spouseId], references: [id])
+  spouses     Member[]  @relation("Spouse")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

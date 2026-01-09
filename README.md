@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gia Phả Dòng Họ - Ancestry Archive
 
-## Getting Started
+Ứng dụng xem và quản lý gia phả dòng họ trực tuyến.
 
-First, run the development server:
+## 🚀 Deploy với Docker (Production)
+
+### Khởi chạy:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Build và start
+docker-compose up -d
+
+# Xem logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🔄 Rebuild sau khi update code:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Rebuild image (data KHÔNG mất)
+docker-compose build
+docker-compose up -d
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💾 Backup & Restore Database
 
-## Learn More
+### Backup:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+./scripts/backup-db.sh
+# → Tạo file trong backups/db_backup_YYYYMMDD_HHMMSS.db
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Restore:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+./scripts/restore-db.sh backups/db_backup_20260109_164800.db
+```
 
-## Deploy on Vercel
+### View database từ volume:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Xem database trực tiếp
+docker run --rm -v z-ancestor_db-data:/data alpine ls -lh /data/
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Copy database ra host để xem bằng DB Browser
+docker run --rm -v z-ancestor_db-data:/data -v $(pwd):/backup alpine \
+  cp /data/production.db /backup/temp.db
+```
+
+## 🛠️ Development
+
+```bash
+npm install
+npm run dev
+```
+
+## 🔒 Environment Variables
+
+Copy `.env.example` sang `.env` và thay đổi:
+
+```env
+ADMIN_PIN=your_secure_pin_here
+```
+
+## 📝 Database Migration
+
+Khi có thay đổi Prisma schema:
+
+```bash
+npx prisma migrate dev --name migration_name
+```
+
+## 🌐 Access
+
+- **URL**: https://z-ancestor.namth.online
+- **Port**: 8080 (Nginx)
+- **Admin Lock**: Nhập PIN để unlock edit mode
+
+---
+
+**Tech Stack**: Next.js 16, Prisma, SQLite, Docker, Nginx
