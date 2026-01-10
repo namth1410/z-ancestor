@@ -10,6 +10,7 @@ import { Save, Upload } from "lucide-react";
 interface MemberFormProps {
   member?: Member | null; // If null, creating new
   members: Member[]; // For selecting relations
+  lineages?: { id: string; name: string }[]; // Optional for now to avoid breaking existing usage
   defaultValues?: Partial<Member>;
   onClose: () => void;
   onSuccess: () => void;
@@ -28,6 +29,7 @@ const SubmitButton = () => {
 const MemberForm = ({
   member,
   members,
+  lineages,
   defaultValues,
   onClose,
   onSuccess,
@@ -194,6 +196,23 @@ const MemberForm = ({
               />
             </div>
           </div>
+        </div>
+
+        {/* Lineage Selection */}
+        <div className={styles.formGroup}>
+          <label>Dòng Họ (Lineage)</label>
+          <select
+            name="lineageId"
+            defaultValue={member?.lineageId || defaultValues?.lineageId || ""}
+            disabled={readOnly}
+          >
+            <option value="">-- Không chọn --</option>
+            {lineages?.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Relations Selectors if not pre-filled */}

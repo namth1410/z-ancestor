@@ -5,8 +5,6 @@ import { revalidatePath } from "next/cache";
 import { writeFile } from "fs/promises";
 import { join } from "path";
 
-// AUTH REMOVED AS REQUESTED
-
 export async function getMembers() {
   try {
     const members = await db.member.findMany({
@@ -53,6 +51,7 @@ export async function createMember(prevState: unknown, formData: FormData) {
       fatherId: (formData.get("fatherId") as string) || null,
       motherId: (formData.get("motherId") as string) || null,
       spouseId: (formData.get("spouseId") as string) || null,
+      lineageId: (formData.get("lineageId") as string) || null,
     };
 
     const avatarFile = formData.get("avatar") as File;
@@ -98,6 +97,7 @@ export async function updateMember(
       fatherId: (formData.get("fatherId") as string) || null,
       motherId: (formData.get("motherId") as string) || null,
       spouseId: (formData.get("spouseId") as string) || null,
+      lineageId: (formData.get("lineageId") as string) || null,
     };
 
     const avatarFile = formData.get("avatar") as File;

@@ -7,6 +7,17 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model Lineage {
+  id           String    @id @default(uuid())
+  code         String    @unique  // "ha", "tran", "dao", "ngoai"
+  name         String              // "Họ Hà", "Họ Trần"
+  rootMemberId String?             // Can be null for new lineages
+  rootMember   Member?   @relation("LineageRoot", fields: [rootMemberId], references: [id], onDelete: SetNull)
+  members      Member[]  @relation("LineageMembers")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
 model Member {
   id          String    @id @default(uuid())
   firstName   String
@@ -22,19 +33,24 @@ model Member {
   occupation  String?
   address     String?
   
+  // Lineage
+  lineageId      String?
+  lineage        Lineage?  @relation("LineageMembers", fields: [lineageId], references: [id], onDelete: SetNull)
+  rootOfLineages Lineage[] @relation("LineageRoot")
+  
   // Quan hệ
   fatherId    String?
   motherId    String?
   spouseId    String?
   
   // Self-relations
-  father      Member?   @relation("FatherChild", fields: [fatherId], references: [id])
+  father      Member?   @relation("FatherChild", fields: [fatherId], references: [id], onDelete: SetNull)
   children    Member[]  @relation("FatherChild")
   
-  mother      Member?   @relation("MotherChild", fields: [motherId], references: [id])
+  mother      Member?   @relation("MotherChild", fields: [motherId], references: [id], onDelete: SetNull)
   mchildren   Member[]  @relation("MotherChild")
 
-  spouse      Member?   @relation("Spouse", fields: [spouseId], references: [id])
+  spouse      Member?   @relation("Spouse", fields: [spouseId], references: [id], onDelete: SetNull)
   spouses     Member[]  @relation("Spouse")
 
   createdAt   DateTime  @default(now())

@@ -1,6 +1,6 @@
-import { getMembers } from "@/actions/members";
 import { isAuthenticated } from "@/actions/auth";
 import FamilyTree from "@/components/FamilyTree/FamilyTree";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -10,13 +10,13 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const lineageNames: Record<string, string> = {
-    ha: "Họ Hà",
-    tran: "Họ Trần",
-    dao: "Họ Đào",
-    ngoai: "Họ Ông Ngoại",
-  };
-  const name = lineageNames[id] || "Dòng Họ";
+
+  // Query lineage from database
+  const lineage = await db.lineage.findUnique({
+    where: { code: id },
+  });
+
+  const name = lineage?.name || "Dòng Họ";
   const url = `https://z-ancestor.namth.online/tree/${id}`;
 
   return {
@@ -39,17 +39,16 @@ export default async function TreePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { data: members = [] } = await getMembers();
-  const isAdmin = await isAuthenticated();
   const { id } = await params;
+  const isAdmin = await isAuthenticated();
 
-  const lineageNames: Record<string, string> = {
-    ha: "Họ Hà",
-    tran: "Họ Trần",
-    dao: "Họ Đào",
-    ngoai: "Họ Ông Ngoại",
-  };
-  const name = lineageNames[id] || "Dòng Họ";
+  // Load recursive lineage data using action
+  const { getLineage } = await import("@/actions/lineages");
+  const result = await getLineage(id);
+  const lineage = result.success ? result.data : null;
+
+  const members = lineage?.members || [];
+  const name = lineage?.name || "Dòng Họ";
 
   // Structured data for breadcrumbs
   const breadcrumbSchema = {

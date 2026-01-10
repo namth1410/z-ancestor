@@ -1,24 +1,26 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3";
 import path from "path";
 
 const globalForPrisma = global as unknown as { prismaFixed: PrismaClient };
 
-const url = process.env.DATABASE_URL;
+const prismaClientSingleton = () => {
+  let url = process.env.DATABASE_URL;
 
-const dbPath =
-  typeof url === "string"
-    ? url.replace("file:", "")
-    : path.join(process.cwd(), "dev.db");
+  // Fix for local dev where .env has relative path for CLI but Runtime needs absolute to prisma/
+  // OR if no env var is present
+  if (!url || url === "file:./dev.db") {
+    url = `file:${path.join(process.cwd(), "prisma/dev.db")}`;
+  }
 
-export const db =
-  globalForPrisma.prismaFixed ||
-  (() => {
-    // Use config object with url for adapter to avoid "replace" error
-    const adapter = new PrismaBetterSQLite3({ url: `file:${dbPath}` } as {
-      url: string;
-    });
-    return new PrismaClient({ adapter });
-  })();
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url,
+      },
+    },
+  });
+};
+
+export const db = globalForPrisma.prismaFixed || prismaClientSingleton();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prismaFixed = db;

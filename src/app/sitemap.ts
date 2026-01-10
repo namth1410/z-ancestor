@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://z-ancestor.namth.online";
-  const lineages = ["ha", "tran", "dao", "ngoai"];
+  const lineages = ["ha", "tran", "dao", "nguyen"];
 
   const lineageUrls = lineages.map((id) => ({
     url: `${baseUrl}/tree/${id}`,

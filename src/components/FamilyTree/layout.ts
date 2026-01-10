@@ -36,11 +36,27 @@ export const getLayoutedElements = (
     }
   });
 
+  // Create a map to look up spouses quickly
+  const memberMap = new Map(members.map((m) => [m.id, m]));
+
   const hiddenIds = new Set<string>();
+
   const hideDescendants = (parentId: string) => {
+    // Hide the children
     const children = childrenMap.get(parentId) || [];
     children.forEach((childId) => {
+      // If child is already hidden, prevent infinite loop (though tree should be acyclic)
+      if (hiddenIds.has(childId)) return;
+
       hiddenIds.add(childId);
+
+      // Also hide spouse of the child (in-law)
+      const child = memberMap.get(childId);
+      if (child && child.spouseId) {
+        hiddenIds.add(child.spouseId);
+      }
+
+      // Recursively hide grandchildren
       hideDescendants(childId);
     });
   };
@@ -52,7 +68,16 @@ export const getLayoutedElements = (
     // Get union of children from both parents
     const allChildren = new Set([...children1, ...children2]);
     allChildren.forEach((childId) => {
+      if (hiddenIds.has(childId)) return;
+
       hiddenIds.add(childId);
+
+      // Also hide spouse of the child
+      const child = memberMap.get(childId);
+      if (child && child.spouseId) {
+        hiddenIds.add(child.spouseId);
+      }
+
       hideDescendants(childId);
     });
   };

@@ -24,9 +24,9 @@ const LINEAGES = [
     icon: "Đ",
   },
   {
-    id: "ngoai",
-    name: "Họ Ông Ngoại",
-    desc: "Gia phả họ Ông Ngoại",
+    id: "nguyen",
+    name: "Họ Nguyễn",
+    desc: "Gia phả họ Nguyễn (Ông Ngoại)",
     gradientClass: style.gradientNgoai,
     icon: "N",
   },

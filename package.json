@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "db:reset": "rm -f prisma/dev.db* && npx prisma db push && npm run seed"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "6.19.1",

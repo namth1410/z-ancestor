@@ -26,6 +26,7 @@ interface MemberDrawerProps {
   defaultValues?: Partial<Member>;
   onAddRelative?: (type: "child" | "spouse" | "parent", member: Member) => void;
   isAdmin: boolean;
+  lineages?: { id: string; name: string }[];
 }
 
 const MemberDrawer = ({
@@ -40,6 +41,7 @@ const MemberDrawer = ({
   defaultValues,
   onAddRelative,
   isAdmin,
+  lineages,
 }: MemberDrawerProps) => {
   // Use render-time state update to cache member
   const [cachedMember, setCachedMember] = useState<Member | null>(member);
@@ -82,6 +84,7 @@ const MemberDrawer = ({
               key={`${mode}-${member?.id || "new"}-${isOpen}`}
               member={isCreating ? null : displayedMember}
               members={members}
+              lineages={lineages}
               defaultValues={defaultValues}
               onClose={handleClose}
               onSuccess={() => {
