@@ -14,15 +14,26 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://z-ancestor.namth.online"),
-  title: "Gia Phả Dòng Họ - Ancestry Archive",
+  title: "Gia Phả Gen Z - Lưu Giữ Gia Phả Số",
   description:
-    "Ứng dụng xem và quản lý gia phả dòng họ trực tuyến. Lưu giữ và phát huy truyền thống uống nước nhớ nguồn.",
+    "Gia Phả Gen Z - Ứng dụng xem và quản lý gia phả dòng họ trực tuyến dành cho thế hệ trẻ. Lưu giữ và phát huy truyền thống uống nước nhớ nguồn.",
+  keywords: [
+    "gia phả gen z",
+    "gia phả",
+    "gia phả online",
+    "cây gia phả",
+    "gia phả số",
+    "family tree",
+    "lập gia phả",
+    "quản lý gia phả",
+    "dòng họ",
+  ],
   openGraph: {
-    title: "Gia Phả Dòng Họ - Ancestry Archive",
+    title: "Gia Phả Gen Z - Lưu Giữ Gia Phả Số",
     description:
-      "Khám phá và lưu giữ những giá trị truyền thống của dòng họ. Cây có gốc mới nở cành xanh ngọn, nước có nguồn mới bể rộng sông sâu.",
+      "Khám phá và lưu giữ những giá trị truyền thống của dòng họ theo cách hiện đại. Cây có gốc mới nở cành xanh ngọn, nước có nguồn mới bể rộng sông sâu.",
     url: "https://z-ancestor.namth.online",
-    siteName: "Gia Phả Dòng Họ",
+    siteName: "Gia Phả Gen Z",
     locale: "vi_VN",
     type: "website",
     images: [
@@ -30,14 +41,14 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Gia Phả Dòng Họ - Ancestry Archive",
+        alt: "Gia Phả Gen Z - Lưu Giữ Gia Phả Số",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gia Phả Dòng Họ",
-    description: "Lưu giữ và phát huy truyền thống dòng họ.",
+    title: "Gia Phả Gen Z",
+    description: "Lưu giữ và phát huy truyền thống dòng họ theo cách Gen Z.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -141,14 +152,11 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "Gia Phả Dòng Họ",
+              name: "Gia Phả Gen Z",
+              alternateName: "Gia Phả Gen Z - Lưu Giữ Gia Phả Số",
               url: "https://z-ancestor.namth.online",
-              potentialAction: {
-                "@type": "SearchAction",
-                target:
-                  "https://z-ancestor.namth.online/search?q={search_term_string}",
-                "query-input": "required name=search_term_string",
-              },
+              description:
+                "Ứng dụng xem và quản lý gia phả dòng họ trực tuyến dành cho thế hệ trẻ.",
             }),
           }}
         />

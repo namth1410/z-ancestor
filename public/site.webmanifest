@@ -1,7 +1,7 @@
 {
-  "name": "Gia Phả Dòng Họ",
-  "short_name": "Gia Phả",
-  "description": "Ứng dụng xem và quản lý gia phả dòng họ trực tuyến",
+  "name": "Gia Phả Gen Z",
+  "short_name": "Gia Phả Gen Z",
+  "description": "Gia Phả Gen Z - Ứng dụng xem và quản lý gia phả dòng họ trực tuyến dành cho thế hệ trẻ",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
