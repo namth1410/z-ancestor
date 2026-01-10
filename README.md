@@ -83,3 +83,16 @@ npx prisma migrate dev --name migration_name
 ---
 
 **Tech Stack**: Next.js 16, Prisma, SQLite, Docker, Nginx
+
+docker run -d \
+ --name z-ancestor \
+ -p 80:8080 \
+ -v z-ancestor-data:/app/data \
+ -e DATABASE_URL=file:/app/data/production.db \
+ -e ADMIN_PIN=123456 \
+ -e NODE_ENV=production \
+ -e HOSTNAME=0.0.0.0 \
+ --restart unless-stopped \
+ dangnam141002/z-ancestor:latest
+
+docker exec -it z-ancestor node prisma/seed.js

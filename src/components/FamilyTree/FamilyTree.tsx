@@ -17,7 +17,9 @@ import CustomNode from "./CustomNode";
 import MarriageNode from "./MarriageNode";
 import MemberDrawer from "../MemberDrawer/MemberDrawer";
 import PasswordModal from "../PasswordModal/PasswordModal";
-import { Search, Plus, Lock, Unlock, Home } from "lucide-react";
+import ImageViewer from "../ImageViewer/ImageViewer";
+import RelationshipModal from "../RelationshipModal/RelationshipModal";
+import { Search, Plus, Lock, Unlock, Home, Users } from "lucide-react";
 import { deleteMember } from "@/actions/members";
 import style from "./FamilyTree.module.scss";
 import { normalizeString } from "@/lib/utils";
@@ -61,6 +63,8 @@ const FamilyTree = ({
   // Admin Lock State
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(initialIsAdmin);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [viewImage, setViewImage] = useState<string | null>(null);
+  const [isRelationshipModalOpen, setIsRelationshipModalOpen] = useState(false);
 
   // Sync members
   useEffect(() => {
@@ -71,11 +75,6 @@ const FamilyTree = ({
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {
     return getLayoutedElements(members, collapsedIds);
   }, [members, collapsedIds]);
-
-  useEffect(() => {
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-  }, [layoutedNodes, layoutedEdges, setNodes, setEdges]);
 
   // Handle Admin Unlock
   const handleToggleLock = () => {
@@ -130,18 +129,30 @@ const FamilyTree = ({
     });
   }, []);
 
-  // Update nodes with listeners
+  const handleViewImage = useCallback((url: string) => {
+    setViewImage(url);
+  }, []);
+
+  // Update nodes with listeners & layout
   useEffect(() => {
-    setNodes((nds) =>
-      nds.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          onToggle: handleToggle,
-        },
-      }))
-    );
-  }, [handleToggle, setNodes, layoutedNodes]);
+    const nodesWithHandlers = layoutedNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        onToggle: handleToggle,
+        onViewImage: handleViewImage,
+      },
+    }));
+    setNodes(nodesWithHandlers);
+    setEdges(layoutedEdges);
+  }, [
+    layoutedNodes,
+    layoutedEdges,
+    setNodes,
+    setEdges,
+    handleToggle,
+    handleViewImage,
+  ]);
 
   const handleNodeClick = (_: React.MouseEvent, node: Node) => {
     if (node.type === "custom") {
@@ -192,6 +203,22 @@ const FamilyTree = ({
         </div>
 
         <div className={style.actions}>
+          <button
+            onClick={() => setIsRelationshipModalOpen(true)}
+            title="Tra cứu quan hệ họ hàng"
+            style={{
+              marginRight: "0.5rem",
+              borderRadius: "9999px",
+              padding: "0.5rem",
+              backgroundColor: "#e0f2fe", // sky-100
+              color: "#0369a1", // sky-700
+              border: "1px solid #7dd3fc", // sky-300
+              cursor: "pointer",
+            }}
+          >
+            <Users size={18} />
+          </button>
+
           <button
             onClick={handleToggleLock}
             className={`btn ${
@@ -304,6 +331,17 @@ const FamilyTree = ({
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
         onSuccess={() => setIsAdminUnlocked(true)}
+      />
+
+      {viewImage && (
+        <ImageViewer src={viewImage} onClose={() => setViewImage(null)} />
+      )}
+
+      <RelationshipModal
+        isOpen={isRelationshipModalOpen}
+        onClose={() => setIsRelationshipModalOpen(false)}
+        members={members}
+        initialSourceId={selectedMember?.id}
       />
     </div>
   );

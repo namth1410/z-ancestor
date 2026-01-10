@@ -65,15 +65,22 @@ const MemberForm = ({
   return (
     <div className={styles.formContainer}>
       <form action={formAction}>
-        {/* Hidden inputs for relations if defaultValues exist */}
+        {/* Hidden inputs for relations: Preserve spouseId if exists (since we don't have a selector for it yet) */}
+        {(member?.spouseId || defaultValues?.spouseId) && (
+          <input
+            type="hidden"
+            name="spouseId"
+            value={member?.spouseId || defaultValues?.spouseId || ""}
+          />
+        )}
+
+        {/* For Parent IDs, we rely on the Select inputs below, but for defaultValues (Create Child), we need hidden inputs if Selects are hidden */}
+        {/* Actually, existing code Logic for Select visibility is based on defaultValues. Let's keep it simple: */}
         {defaultValues?.fatherId && (
           <input type="hidden" name="fatherId" value={defaultValues.fatherId} />
         )}
         {defaultValues?.motherId && (
           <input type="hidden" name="motherId" value={defaultValues.motherId} />
-        )}
-        {defaultValues?.spouseId && (
-          <input type="hidden" name="spouseId" value={defaultValues.spouseId} />
         )}
 
         <div className={styles.formGroup}>
@@ -147,7 +154,7 @@ const MemberForm = ({
               <label>Nghề nghiệp / Vai vế</label>
               <input
                 type="text"
-                name="bio"
+                name="occupation"
                 defaultValue={member?.occupation || ""}
                 placeholder="Giáo viên, Trưởng họ..."
                 disabled={readOnly}

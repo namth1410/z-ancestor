@@ -10,14 +10,22 @@ type CustomData = {
   isCollapsed: boolean;
   hasChildren: boolean;
   onToggle: (id: string) => void;
+  onViewImage?: (url: string) => void;
 };
 
 const CustomNode = ({ data }: NodeProps<CustomData>) => {
-  const { member, isCollapsed, hasChildren, onToggle } = data;
+  const { member, isCollapsed, hasChildren, onToggle, onViewImage } = data;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggle(member.id);
+  };
+
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (member.avatar && onViewImage) {
+      onViewImage(member.avatar);
+    }
   };
 
   const displayName = `${member.lastName} ${member.firstName}`;
@@ -38,9 +46,11 @@ const CustomNode = ({ data }: NodeProps<CustomData>) => {
       <img
         src={member.avatar || "/default-avatar.svg"}
         alt={displayName}
+        onClick={handleImageClick}
         className={clsx(
           styles.avatar,
-          !member.avatar && styles.placeholderAvatar
+          !member.avatar && styles.placeholderAvatar,
+          member.avatar && "cursor-pointer hover:opacity-90 transition-opacity"
         )}
       />
 
