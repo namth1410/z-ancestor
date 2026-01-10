@@ -343,6 +343,29 @@ const FamilyTree = ({
         members={members}
         initialSourceId={selectedMember?.id}
       />
+
+      <div
+        style={{
+          position: "fixed",
+          bottom: "10px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          fontSize: "12px",
+          color: "#666",
+          background: "rgba(255,255,255,0.85)",
+          padding: "6px 16px",
+          borderRadius: "99px",
+          zIndex: 50,
+          pointerEvents: "none",
+          whiteSpace: "nowrap",
+          backdropFilter: "blur(4px)",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+          border: "1px solid rgba(0,0,0,0.05)",
+        }}
+      >
+        🚧 Sản phẩm đang phát triển (Beta). Nếu có sai sót xin vui lòng lượng
+        thứ hoặc liên hệ Admin.
+      </div>
     </div>
   );
 };
