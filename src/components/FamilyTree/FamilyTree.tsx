@@ -17,10 +17,11 @@ import CustomNode from "./CustomNode";
 import MarriageNode from "./MarriageNode";
 import MemberDrawer from "../MemberDrawer/MemberDrawer";
 import PasswordModal from "../PasswordModal/PasswordModal";
-import { Search, Plus, Lock, Unlock } from "lucide-react";
+import { Search, Plus, Lock, Unlock, Home } from "lucide-react";
 import { deleteMember } from "@/actions/members";
 import style from "./FamilyTree.module.scss";
 import { normalizeString } from "@/lib/utils";
+import Link from "next/link";
 
 interface FamilyTreeProps {
   initialMembers: Member[];
@@ -183,7 +184,12 @@ const FamilyTree = ({
   return (
     <div className={style.container}>
       <header className={style.toolbar}>
-        <div className="flex flex-col"></div>
+        <div className="flex items-center">
+          <Link href="/" className={style.homeButton} title="Về trang chủ">
+            <Home size={20} />
+            <span className={style.homeButtonTooltip}>Về trang chủ</span>
+          </Link>
+        </div>
 
         <div className={style.actions}>
           <button

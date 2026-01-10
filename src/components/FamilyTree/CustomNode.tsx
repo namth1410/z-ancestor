@@ -54,7 +54,8 @@ const CustomNode = ({ data }: NodeProps<CustomData>) => {
         )}
       </div>
 
-      {hasChildren && (
+      {/* Only show toggle for single parents (no spouse) */}
+      {hasChildren && !member.spouseId && (
         <button className={styles.toggleBtn} onClick={handleToggle}>
           {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
         </button>

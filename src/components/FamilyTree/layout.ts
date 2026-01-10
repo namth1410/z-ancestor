@@ -45,19 +45,43 @@ export const getLayoutedElements = (
     });
   };
 
+  // Hide descendants of a marriage (both parents)
+  const hideMarriageDescendants = (spouse1Id: string, spouse2Id: string) => {
+    const children1 = childrenMap.get(spouse1Id) || [];
+    const children2 = childrenMap.get(spouse2Id) || [];
+    // Get union of children from both parents
+    const allChildren = new Set([...children1, ...children2]);
+    allChildren.forEach((childId) => {
+      hiddenIds.add(childId);
+      hideDescendants(childId);
+    });
+  };
+
+  // Helper to generate couple key (moved up for early use)
+  const getCoupleKey = (id1: string, id2: string) => {
+    return [id1, id2].sort().join("-");
+  };
+
+  // Check for individual member collapse
   members.forEach((m) => {
     if (collapsedIds.has(m.id)) {
       hideDescendants(m.id);
     }
   });
 
+  // Check for marriage node collapse BEFORE filtering visible members
+  members.forEach((member) => {
+    if (member.spouseId) {
+      const coupleKey = getCoupleKey(member.id, member.spouseId);
+      const marriageNodeId = `marriage-${coupleKey}`;
+      if (collapsedIds.has(marriageNodeId)) {
+        hideMarriageDescendants(member.id, member.spouseId);
+      }
+    }
+  });
+
   const visibleMembers = members.filter((m) => !hiddenIds.has(m.id));
   const visibleMemberIds = new Set(visibleMembers.map((m) => m.id));
-
-  // Helper to generate couple key
-  const getCoupleKey = (id1: string, id2: string) => {
-    return [id1, id2].sort().join("-");
-  };
 
   // Track created marriage nodes to avoid duplicates
   const marriageNodes = new Map<
@@ -99,12 +123,21 @@ export const getLayoutedElements = (
           height: MARRIAGE_NODE_SIZE,
         });
 
+        // Check if this couple has children
+        const spouse1Children = childrenMap.get(member.id) || [];
+        const spouse2Children = childrenMap.get(member.spouseId) || [];
+        const hasChildren =
+          spouse1Children.length > 0 || spouse2Children.length > 0;
+
         nodes.push({
           id: marriageNodeId,
           type: "marriage", // Uses MarriageNode
-          data: {},
+          data: {
+            marriageId: marriageNodeId,
+            isCollapsed: collapsedIds.has(marriageNodeId),
+            hasChildren,
+          },
           position: { x: 0, y: 0 },
-          // Important: connectable false usually handled in component
         });
 
         // Add edges from spouses to marriage node

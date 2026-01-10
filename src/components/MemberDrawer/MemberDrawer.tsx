@@ -79,6 +79,7 @@ const MemberDrawer = ({
         <div className={style.content}>
           <div className={style.formWrapper}>
             <MemberForm
+              key={`${mode}-${member?.id || "new"}-${isOpen}`}
               member={isCreating ? null : displayedMember}
               members={members}
               defaultValues={defaultValues}
