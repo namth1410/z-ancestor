@@ -41,8 +41,8 @@ COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy Prisma for migrations
 COPY --from=build --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Copy only the prisma dependencies for migration
-COPY --from=prisma-deps --chown=nextjs:nodejs /app/node_modules ./prisma-deps
+# Copy only the prisma dependencies for migration, keeping node_modules structure
+COPY --from=prisma-deps --chown=nextjs:nodejs /app/node_modules ./prisma-deps/node_modules
 
 # Copy rootfs (Config files)
 COPY --chown=nextjs:nodejs ./rootfs /
@@ -58,4 +58,4 @@ USER nextjs
 # 2. Create/update database schema using the isolated Prisma binary
 # 3. Start Next.js in background
 # 4. Start Nginx in foreground
-CMD ["sh", "-c", "mkdir -p /app/data && ./prisma-deps/.bin/prisma db push --accept-data-loss && node server.js & nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "mkdir -p /app/data && ./prisma-deps/node_modules/.bin/prisma db push --accept-data-loss && node server.js & nginx -g 'daemon off;'"]
