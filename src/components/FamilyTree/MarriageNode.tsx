@@ -31,8 +31,28 @@ const MarriageNode = ({ data }: NodeProps<MarriageNodeData>) => {
       {/* Inputs from Parents */}
       <Handle
         type="target"
-        position={Position.Top}
-        style={{ background: "transparent", border: "none" }}
+        position={Position.Left}
+        id="target-left"
+        style={{
+          background: "transparent",
+          border: "none",
+          left: 0,
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
+        isConnectable={false}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="target-right"
+        style={{
+          background: "transparent",
+          border: "none",
+          right: 0,
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
         isConnectable={false}
       />
 

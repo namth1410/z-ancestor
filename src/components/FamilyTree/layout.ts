@@ -4,353 +4,393 @@ import { Node, Edge, Position } from "reactflow";
 
 const NODE_WIDTH = 250;
 const NODE_HEIGHT = 100;
-const MARRIAGE_NODE_SIZE = 10;
+
+const SPOUSE_GAP = 50;
+
+// Local type to handle potential schema/client sync issues
+type MemberWithOrder = Member & { birthOrder?: number | null };
 
 export const getLayoutedElements = (
   members: Member[],
-  collapsedIds: Set<string>
+  collapsedIds: Set<string>,
 ) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  // Increase ranksep to allow space for the vertical drop
-  dagreGraph.setGraph({ rankdir: "TB", nodesep: 50, ranksep: 80 });
+  // Define graph direction (Top-to-Bottom) and spacing
+  dagreGraph.setGraph({ rankdir: "TB", nodesep: 100, ranksep: 100 });
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  // const memberMap = new Map(members.map((m) => [m.id, m]));
-  const childrenMap = new Map<string, string[]>();
+  const visibleMembersMap = new Map<string, Member>();
 
-  // Build children map logic (same as before)
-  members.forEach((m) => {
-    if (m.fatherId) {
-      const list = childrenMap.get(m.fatherId) || [];
-      list.push(m.id);
-      childrenMap.set(m.fatherId, list);
-    }
-    if (m.motherId) {
-      const list = childrenMap.get(m.motherId) || [];
-      list.push(m.id);
-      childrenMap.set(m.motherId, list);
-    }
-  });
-
-  // Create a map to look up spouses quickly
-  const memberMap = new Map(members.map((m) => [m.id, m]));
-
-  const hiddenIds = new Set<string>();
-
-  const hideDescendants = (parentId: string) => {
-    // Hide the children
-    const children = childrenMap.get(parentId) || [];
-    children.forEach((childId) => {
-      // If child is already hidden, prevent infinite loop (though tree should be acyclic)
-      if (hiddenIds.has(childId)) return;
-
-      hiddenIds.add(childId);
-
-      // Also hide spouse of the child (in-law)
-      const child = memberMap.get(childId);
-      if (child && child.spouseId) {
-        hiddenIds.add(child.spouseId);
-      }
-
-      // Recursively hide grandchildren
-      hideDescendants(childId);
-    });
-  };
-
-  // Hide descendants of a marriage (both parents)
-  const hideMarriageDescendants = (spouse1Id: string, spouse2Id: string) => {
-    const children1 = childrenMap.get(spouse1Id) || [];
-    const children2 = childrenMap.get(spouse2Id) || [];
-    // Get union of children from both parents
-    const allChildren = new Set([...children1, ...children2]);
-    allChildren.forEach((childId) => {
-      if (hiddenIds.has(childId)) return;
-
-      hiddenIds.add(childId);
-
-      // Also hide spouse of the child
-      const child = memberMap.get(childId);
-      if (child && child.spouseId) {
-        hiddenIds.add(child.spouseId);
-      }
-
-      hideDescendants(childId);
-    });
-  };
-
-  // Helper to generate couple key (moved up for early use)
+  // Helper: Get couple ID
   const getCoupleKey = (id1: string, id2: string) => {
     return [id1, id2].sort().join("-");
   };
 
-  // Check for individual member collapse
+  // --- 1. Identify Visible Members (Handling Filtering) ---
+  const childrenMap = new Map<string, Member[]>();
+
+  // Build children list and Sort siblings
   members.forEach((m) => {
+    const parentIds = [m.fatherId, m.motherId].filter(Boolean) as string[];
+    parentIds.forEach((pid) => {
+      const list = childrenMap.get(pid) || [];
+      list.push(m);
+      childrenMap.set(pid, list);
+    });
+  });
+
+  // Sort children function
+  const sortChildren = (children: Member[]) => {
+    return children.sort((a, b) => {
+      // 1. By Birth Date
+      if (a.birthDate && b.birthDate) {
+        return (
+          new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime()
+        );
+      }
+      // 2. By Birth Order (if no date)
+      const orderA = (a as MemberWithOrder).birthOrder;
+      const orderB = (b as MemberWithOrder).birthOrder;
+
+      if (
+        orderA !== null &&
+        orderA !== undefined &&
+        orderB !== null &&
+        orderB !== undefined
+      ) {
+        return (orderA as number) - (orderB as number);
+      }
+      // 3. Fallback: Name
+      return (a.firstName + a.lastName).localeCompare(b.firstName + b.lastName);
+    });
+  };
+
+  // Apply sorting to all children lists
+  for (const [pid, list] of childrenMap.entries()) {
+    childrenMap.set(pid, sortChildren(list));
+  }
+
+  // Calculate hidden IDs based on collapsed state
+  const hiddenIds = new Set<string>();
+  const hideDescendants = (parentId: string) => {
+    const children = childrenMap.get(parentId) || [];
+    children.forEach((child) => {
+      if (hiddenIds.has(child.id)) return;
+      hiddenIds.add(child.id);
+
+      // Also hide spouse
+      if (child.spouseId) hiddenIds.add(child.spouseId);
+
+      hideDescendants(child.id);
+    });
+  };
+
+  const hideMarriageDescendants = (spouse1Id: string, spouse2Id: string) => {
+    const c1 = childrenMap.get(spouse1Id) || [];
+    const c2 = childrenMap.get(spouse2Id) || [];
+    const allChildren = sortChildren([...new Set([...c1, ...c2])]); // Unique & Sorted
+
+    allChildren.forEach((child) => {
+      if (hiddenIds.has(child.id)) return;
+      hiddenIds.add(child.id);
+      if (child.spouseId) hiddenIds.add(child.spouseId);
+      hideDescendants(child.id);
+    });
+  };
+
+  // Process Collapse Logic
+  members.forEach((m) => {
+    // Individual collapse
     if (collapsedIds.has(m.id)) {
       hideDescendants(m.id);
     }
-  });
-
-  // Check for marriage node collapse BEFORE filtering visible members
-  members.forEach((member) => {
-    if (member.spouseId) {
-      const coupleKey = getCoupleKey(member.id, member.spouseId);
+    // Marriage collapse
+    if (m.spouseId) {
+      const coupleKey = getCoupleKey(m.id, m.spouseId);
       const marriageNodeId = `marriage-${coupleKey}`;
       if (collapsedIds.has(marriageNodeId)) {
-        hideMarriageDescendants(member.id, member.spouseId);
+        hideMarriageDescendants(m.id, m.spouseId);
       }
     }
   });
 
-  const visibleMembers = members.filter((m) => !hiddenIds.has(m.id));
-  const visibleMemberIds = new Set(visibleMembers.map((m) => m.id));
+  // Filter visible members
+  members.forEach((m) => {
+    if (!hiddenIds.has(m.id)) {
+      visibleMembersMap.set(m.id, m);
+    }
+  });
 
-  // Track created marriage nodes to avoid duplicates
+  // --- 2. Group into Layout Nodes (Couples or Singles) ---
+  const processedMembers = new Set<string>();
   const marriageNodes = new Map<
     string,
     { id: string; spouse1: string; spouse2: string }
   >();
 
-  // 1. Add Member Nodes
-  visibleMembers.forEach((member) => {
-    dagreGraph.setNode(member.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-    nodes.push({
-      id: member.id,
-      type: "custom", // Uses CustomNode
-      data: {
-        member,
-        isCollapsed: collapsedIds.has(member.id),
-        hasChildren: (childrenMap.get(member.id)?.length || 0) > 0,
-      },
-      position: { x: 0, y: 0 },
-    });
-  });
+  visibleMembersMap.forEach((member) => {
+    if (processedMembers.has(member.id)) return;
 
-  // 2. Identify Couples and Create Marriage Nodes
-  visibleMembers.forEach((member) => {
-    if (member.spouseId && visibleMemberIds.has(member.spouseId)) {
-      const coupleKey = getCoupleKey(member.id, member.spouseId);
-      if (!marriageNodes.has(coupleKey)) {
-        const marriageNodeId = `marriage-${coupleKey}`;
-        marriageNodes.set(coupleKey, {
-          id: marriageNodeId,
-          spouse1: member.id,
-          spouse2: member.spouseId,
-        });
+    const spouseId = member.spouseId;
+    const spouse = spouseId ? visibleMembersMap.get(spouseId) : null;
 
-        // Add to Dagre
-        // Set size small. Dagre places it on next rank typically if edges exist.
-        dagreGraph.setNode(marriageNodeId, {
-          width: MARRIAGE_NODE_SIZE,
-          height: MARRIAGE_NODE_SIZE,
-        });
+    if (spouse) {
+      // Create a COUPLE GROUP
+      const coupleKey = getCoupleKey(member.id, spouseId!);
 
-        // Check if this couple has children
-        const spouse1Children = childrenMap.get(member.id) || [];
-        const spouse2Children = childrenMap.get(member.spouseId) || [];
-        const hasChildren =
-          spouse1Children.length > 0 || spouse2Children.length > 0;
+      // Ensure consistency: defined mainly by the lexicographically first ID to avoid duplicates
+      // But here we rely on processedSet.
+      processedMembers.add(member.id);
+      processedMembers.add(spouseId!);
 
-        nodes.push({
-          id: marriageNodeId,
-          type: "marriage", // Uses MarriageNode
-          data: {
-            marriageId: marriageNodeId,
-            isCollapsed: collapsedIds.has(marriageNodeId),
-            hasChildren,
-          },
-          position: { x: 0, y: 0 },
-        });
+      // Determine "Primary" for the group ID (just for dagre)
+      const groupId = `group-${coupleKey}`;
 
-        // Add edges from spouses to marriage node
-        // We use 'smoothstep' for orthogonal feel
+      // Calculate Group Width: 2 Nodes + Gap
+      const width = NODE_WIDTH * 2 + SPOUSE_GAP;
 
-        // Edge from Member -> Marriage
-        dagreGraph.setEdge(member.id, marriageNodeId);
-        edges.push({
-          id: `e-${member.id}-${marriageNodeId}`,
-          source: member.id,
-          target: marriageNodeId,
-          type: "smoothstep",
-          style: { stroke: "#57534e", strokeWidth: 1.5 },
-          animated: false,
-        });
+      dagreGraph.setNode(groupId, { width, height: NODE_HEIGHT });
 
-        // Edge from Spouse -> Marriage
-        dagreGraph.setEdge(member.spouseId, marriageNodeId);
-        edges.push({
-          id: `e-${member.spouseId}-${marriageNodeId}`,
-          source: member.spouseId,
-          target: marriageNodeId,
-          type: "smoothstep",
-          style: { stroke: "#57534e", strokeWidth: 1.5 },
-          animated: false,
-        });
-      }
-    }
-  });
-
-  // 3. Connect Children
-  visibleMembers.forEach((member) => {
-    // Determine parent connection
-    const father =
-      member.fatherId && visibleMemberIds.has(member.fatherId)
-        ? member.fatherId
-        : null;
-    const mother =
-      member.motherId && visibleMemberIds.has(member.motherId)
-        ? member.motherId
-        : null;
-
-    if (father && mother) {
-      // Connect to Marriage Node
-      const coupleKey = getCoupleKey(father, mother);
-      const marriageNode = marriageNodes.get(coupleKey);
-
-      if (marriageNode) {
-        dagreGraph.setEdge(marriageNode.id, member.id);
-        edges.push({
-          id: `e-${marriageNode.id}-${member.id}`,
-          source: marriageNode.id,
-          target: member.id,
-          type: "smoothstep",
-          style: { stroke: "#57534e", strokeWidth: 1.5 },
-          animated: true,
-        });
-        return; // Done
-      }
-    }
-
-    // Fallback: Single parent or parents not married/visible together?
-    // Just connect to whoever is available
-    if (father) {
-      dagreGraph.setEdge(father, member.id);
-      edges.push({
-        id: `e-${father}-${member.id}`,
-        source: father,
-        target: member.id,
-        type: "smoothstep",
-        style: { stroke: "#57534e", strokeWidth: 1.5 },
-        animated: true,
+      // Record marriage info
+      const marriageNodeId = `marriage-${coupleKey}`;
+      marriageNodes.set(groupId, {
+        id: marriageNodeId,
+        spouse1: member.id,
+        spouse2: spouseId!,
       });
-    }
-    if (mother && !father) {
-      // If father exists, we already added edge (or marriage).
-      // Wait, if no marriage node but both parents exist (rare?), connect both?
-      // Standard graph view: connect both.
-      dagreGraph.setEdge(mother, member.id);
-      edges.push({
-        id: `e-${mother}-${member.id}`,
-        source: mother,
-        target: member.id,
-        type: "smoothstep",
-        style: { stroke: "#57534e", strokeWidth: 1.5 },
-        animated: true,
-      });
+    } else {
+      // SINGLE NODE
+      processedMembers.add(member.id);
+      dagreGraph.setNode(member.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
     }
   });
 
-  // 4. Run Layout
+  // --- 3. Add Edges ---
+  // Iterate visible members again to connect Parent -> Child
+  // We need to map "Member ID" to "Dagre Node ID" (Group or MemberID)
+  const getDagreId = (memberId: string) => {
+    const member = visibleMembersMap.get(memberId);
+    if (!member) return null;
+    if (member.spouseId && visibleMembersMap.has(member.spouseId)) {
+      return `group-${getCoupleKey(member.id, member.spouseId)}`;
+    }
+    return member.id;
+  };
+
+  visibleMembersMap.forEach((child) => {
+    const fatherId = child.fatherId;
+    const motherId = child.motherId;
+
+    let sourceDagreId: string | null = null;
+
+    // Determine Source
+    if (
+      fatherId &&
+      motherId &&
+      visibleMembersMap.has(fatherId) &&
+      visibleMembersMap.has(motherId)
+    ) {
+      // Both parents visible -> Source is their GROUP
+      sourceDagreId = `group-${getCoupleKey(fatherId, motherId)}`;
+    } else if (fatherId && visibleMembersMap.has(fatherId)) {
+      sourceDagreId = getDagreId(fatherId);
+    } else if (motherId && visibleMembersMap.has(motherId)) {
+      sourceDagreId = getDagreId(motherId);
+    }
+
+    const targetDagreId = getDagreId(child.id);
+
+    if (sourceDagreId && targetDagreId) {
+      // Avoid self-loops (shouldn't happen in tree) and duplicate edges
+      // Dagre doesn't like multi-edges between same nodes often, but here:
+      // Case: Siblings have same Source Group -> Same Target Group? No, siblings are diff members.
+      // If siblings are married to each other? (Sweet Home Alabama?) -> Graph cycle?
+
+      // Add minimal edge to Dagre for ranking
+      // Note: multiple edges between same nodes in Dagre is fine usually?
+      // Actually, we should only add ONE edge per relationship to Dagre to establish rank.
+      // But duplicate edges don't hurt much other than perf.
+      dagreGraph.setEdge(sourceDagreId, targetDagreId);
+    }
+  });
+
+  // --- 4. Run Layout ---
   dagre.layout(dagreGraph);
 
-  // 5. Apply positions and Post-Process Marriage Nodes
-  const layoutedNodes = nodes.map((node) => {
-    const nodePos = dagreGraph.node(node.id);
-    let x =
-      nodePos.x -
-      (node.id.startsWith("marriage") ? MARRIAGE_NODE_SIZE : NODE_WIDTH) / 2;
-    const y =
-      nodePos.y -
-      (node.id.startsWith("marriage") ? MARRIAGE_NODE_SIZE : NODE_HEIGHT) / 2;
+  // --- 5. Unpack Nodes and Generate Elements ---
+  dagreGraph.nodes().forEach((nodeKey) => {
+    const pos = dagreGraph.node(nodeKey); // Center x, y
 
-    // Post-processing for Marriage Nodes:
-    // Move them up to be strictly between parents
-    if (node.id.startsWith("marriage")) {
-      // Find the specific couple entry (slow but safe loop)
-      for (const info of marriageNodes.values()) {
-        if (info.id === node.id) {
-          const p1 = dagreGraph.node(info.spouse1);
-          const p2 = dagreGraph.node(info.spouse2);
+    // Check if it is a Group
+    if (nodeKey.startsWith("group-")) {
+      const marriageInfo = marriageNodes.get(nodeKey)!;
+      const spouse1 = visibleMembersMap.get(marriageInfo.spouse1)!;
+      const spouse2 = visibleMembersMap.get(marriageInfo.spouse2)!;
+      const marriageNodeId = marriageInfo.id;
 
-          if (p1 && p2) {
-            // Calculate midpoint
-            const midX = (p1.x + p2.x) / 2;
-            // Use the Y of the parents (assuming same rank, Dagre usually does this)
-            // But we want the visual connection to be at the "bottom" handle of parents?
-            // Or center?
-            // Standard Nodes: handle is usually bottom/top.
-            // Position y is top-left corner.
-            // p1.y is center Y in Dagre.
-            // We want the Marriage Node to align with the parents' visual center or bottom?
-            // User said: "nối ngang với nhau" (connect horizontally).
-            // Ideally from center-right of Father to center-left of Mother?
-            // Or Bottom-center to Bottom-center?
-            // If we use smoothstep, standard handles are Top/Bottom.
-            // So edges go Bottom -> Top of Marriage -> Bottom of Marriage -> Top of Child.
-            // So Marriage Node should be slightly BELOW the parents to form the horizontal lines.
-            // A --(down-over)--> M <--(down-over)-- B
-            // If M is at Y = ParentsY + some offset, smoothstep draws vertical then horizontal.
-            // We want: A ---- M ---- B
-            // This implies A and B handles are SIDE handles? Or M is at same Y.
-            // For simplicity with Top/Bottom handles:
-            // A(Bottom) -> M(Top). B(Bottom) -> M(Top).
-            // If M.y is > A.y, edges go down.
-            // If M.y == A.y? Smoothstep might go weird.
-            // Let's rely on standard Dagre Y for now (which puts M a rank below)
-            // BUT simply center X.
-            // The visual result: A and B side-by-side. Lines go down to M. M goes down to Child.
-            // This is:
-            // A   B
-            //  \ /    (curved or angled)
-            //   M
-            //   |
-            //   C
-            //
-            // The user wanted "nối ngang" (connect horizontally).
-            // To fake horizontal connection with TB graph:
-            // We can physically place M exactly between A and B, at the SAME Y.
-            // And assume edges are drawn from side? No, handles are Top/Bottom.
-            // If handles are T/B:
-            // We cannot easily draw "A - M - B" horizontal line using Bottom handles, because edges exit downwards.
-            // UNLESS we define custom handles for spouses (Right/Left).
+      // Calculate positions relative to Group Center (pos.x, pos.y)
+      // Group Width = NODE_WIDTH * 2 + SPOUSE_GAP
+      //                 [ Spouse 1 ]  -  [ Spouse 2 ]
+      // x coords:       -offset           +offset
 
-            // ALTERNATIVE: Use the standard "Tree" look but tweaked.
-            // [Father] [Mother]
-            //    |_______|
-            //        |
-            //     [Child]
-            //
-            // To achieve this specific look:
-            // M is at Y = ParentsY + Height/2 + Gap?
-            // M x = Midpoint.
-            // Edges A->M and B->M.
-            // This produces the "Bracket" look.
+      // Determine "Male" on left usually? Or arbitrary?
+      // Let's put Husband (Left) and Wife (Right) if possible
+      let leftSpouse = spouse1;
+      let rightSpouse = spouse2;
 
-            // User request: "node bố mẹ phải nối ngang với nhau, rồi ở giữ đường nối ngang đó..."
-            // Literal: Parents connected horizontal line. Middle of that line -> vertical down.
-            // This IS the bracket look.
-            // So M should be at a specific Y below parents.
-            // Dagre likely puts M at Rank 1.
-            // Let's ensure M.x is exactly midpoint.
+      if (spouse1.gender === "female" && spouse2.gender === "male") {
+        leftSpouse = spouse2;
+        rightSpouse = spouse1;
+      }
 
-            x = midX - MARRIAGE_NODE_SIZE / 2;
-            // Retain Dagre's Y, it's usually correct rank below.
-          }
-          break;
-        }
+      const halfWidth = NODE_WIDTH / 2;
+      const offset = halfWidth + SPOUSE_GAP / 2;
+
+      // Position 1 (Left)
+      const x1 = pos.x - offset;
+      const y1 = pos.y - NODE_HEIGHT / 2;
+
+      // Position 2 (Right)
+      const x2 = pos.x + offset;
+      const y2 = pos.y - NODE_HEIGHT / 2;
+
+      // Add Spouse Nodes
+      nodes.push({
+        id: leftSpouse.id,
+        type: "custom",
+        data: {
+          member: leftSpouse,
+          isCollapsed: collapsedIds.has(leftSpouse.id),
+        },
+        position: { x: x1, y: y1 },
+        sourcePosition: "bottom" as Position,
+        targetPosition: "top" as Position,
+      });
+
+      nodes.push({
+        id: rightSpouse.id,
+        type: "custom",
+        data: {
+          member: rightSpouse,
+          isCollapsed: collapsedIds.has(rightSpouse.id),
+        },
+        position: { x: x2, y: y2 },
+        sourcePosition: "bottom" as Position,
+        targetPosition: "top" as Position,
+      });
+
+      // Check children existence for the marriage toggle
+      const c1 = childrenMap.get(leftSpouse.id) || [];
+      const c2 = childrenMap.get(rightSpouse.id) || [];
+      const hasChildren = c1.length > 0 || c2.length > 0;
+
+      // Add Marriage Node (Center)
+      // Position it exactly between them but lower to form a bracket
+      const MARRIAGE_VERTICAL_OFFSET = 30;
+      const actualSize = hasChildren ? 32 : 10;
+      const mx = pos.x - actualSize / 2; // Center of group
+      const my =
+        pos.y + NODE_HEIGHT / 2 + MARRIAGE_VERTICAL_OFFSET - actualSize / 2;
+
+      nodes.push({
+        id: marriageNodeId,
+        type: "marriage",
+        data: {
+          marriageId: marriageNodeId,
+          isCollapsed: collapsedIds.has(marriageNodeId),
+          hasChildren,
+        },
+        position: { x: mx, y: my },
+        sourcePosition: "bottom" as Position,
+        targetPosition: "top" as Position,
+      });
+
+      // Add Edges: Spouse -> Marriage
+      edges.push({
+        id: `e-${leftSpouse.id}-${marriageNodeId}`,
+        source: leftSpouse.id,
+        target: marriageNodeId,
+        targetHandle: "target-left",
+        type: "smoothstep",
+        style: { stroke: "#57534e", strokeWidth: 1.5 },
+      });
+      edges.push({
+        id: `e-${rightSpouse.id}-${marriageNodeId}`,
+        source: rightSpouse.id,
+        target: marriageNodeId,
+        targetHandle: "target-right",
+        type: "smoothstep",
+        style: { stroke: "#57534e", strokeWidth: 1.5 },
+      });
+    } else {
+      // Single Node
+      const member = visibleMembersMap.get(nodeKey);
+      if (member) {
+        nodes.push({
+          id: member.id,
+          type: "custom",
+          data: { member, isCollapsed: collapsedIds.has(member.id) },
+          position: {
+            x: pos.x - NODE_WIDTH / 2,
+            y: pos.y - NODE_HEIGHT / 2,
+          },
+          sourcePosition: "bottom" as Position,
+          targetPosition: "top" as Position,
+        });
       }
     }
-
-    return {
-      ...node,
-      position: { x, y },
-      targetPosition: Position.Top,
-      sourcePosition: Position.Bottom,
-    };
   });
 
-  return { nodes: layoutedNodes, edges };
+  // --- 6. Generate Edges (Parent -> Child) ---
+  visibleMembersMap.forEach((child) => {
+    // Find parents
+    const father = child.fatherId
+      ? visibleMembersMap.get(child.fatherId)
+      : null;
+    const mother = child.motherId
+      ? visibleMembersMap.get(child.motherId)
+      : null;
+
+    // Case 1: Married Parents (Both visible)
+    if (father && mother && father.spouseId === mother.id) {
+      const coupleKey = getCoupleKey(father.id, mother.id);
+      const marriageNodeId = `marriage-${coupleKey}`;
+
+      // Connect Marriage Node -> Child
+      edges.push({
+        id: `e-${marriageNodeId}-${child.id}`,
+        source: marriageNodeId,
+        target: child.id,
+        type: "smoothstep",
+        style: { stroke: "#57534e", strokeWidth: 1.5 },
+      });
+    }
+    // Case 2: Single or Unmarried Parents
+    else {
+      if (father) {
+        edges.push({
+          id: `e-${father.id}-${child.id}`,
+          source: father.id,
+          target: child.id,
+          type: "smoothstep",
+          style: { stroke: "#57534e", strokeWidth: 1.5 },
+        });
+      }
+      if (mother) {
+        edges.push({
+          id: `e-${mother.id}-${child.id}`,
+          source: mother.id,
+          target: child.id,
+          type: "smoothstep",
+          style: { stroke: "#57534e", strokeWidth: 1.5 },
+        });
+      }
+    }
+  });
+
+  return { nodes, edges };
 };
