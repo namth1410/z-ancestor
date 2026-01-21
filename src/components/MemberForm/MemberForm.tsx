@@ -36,7 +36,7 @@ const MemberForm = ({
   readOnly = false,
 }: MemberFormProps) => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    member?.avatar || defaultValues?.avatar || null
+    member?.avatar || defaultValues?.avatar || null,
   );
 
   const action = member ? updateMember.bind(null, member.id) : createMember;
@@ -202,6 +202,27 @@ const MemberForm = ({
                 disabled={readOnly}
               />
             </div>
+          </div>
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.col}>
+            <div className={styles.formGroup}>
+              <label>Thứ tự sinh (trong anh em ruột)</label>
+              <input
+                type="number"
+                name="birthOrder"
+                defaultValue={member?.birthOrder || ""}
+                placeholder="1 (Con cả), 2 (Con thứ)..."
+                disabled={readOnly}
+              />
+              <small style={{ color: "gray", fontSize: "0.8em" }}>
+                * Dùng để xác định Anh/Em khi không có năm sinh
+              </small>
+            </div>
+          </div>
+          <div className={styles.col}>
+            {/* Empty col for spacing or future fields */}
           </div>
         </div>
 

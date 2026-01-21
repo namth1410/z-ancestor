@@ -17,6 +17,7 @@
     "better-sqlite3": "^12.5.0",
     "clsx": "^2.1.1",
     "dagre": "^0.8.5",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
@@ -25,13 +26,13 @@
     "sass": "^1.97.2"
   },
   "devDependencies": {
-    "prisma": "6.19.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "prisma": "6.19.1",
     "typescript": "^5"
   }
 }

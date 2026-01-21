@@ -68,6 +68,9 @@ export async function createMember(prevState: unknown, formData: FormData) {
         ...data,
         birthDate: birthDateStr ? new Date(birthDateStr) : null,
         deathDate: deathDateStr ? new Date(deathDateStr) : null,
+        birthOrder: formData.get("birthOrder")
+          ? parseInt(formData.get("birthOrder") as string)
+          : null,
         avatar: avatarUrl,
       },
     });
@@ -83,7 +86,7 @@ export async function createMember(prevState: unknown, formData: FormData) {
 export async function updateMember(
   id: string,
   prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   try {
     const data = {
@@ -115,6 +118,9 @@ export async function updateMember(
         ...data,
         birthDate: birthDateStr ? new Date(birthDateStr) : null,
         deathDate: deathDateStr ? new Date(deathDateStr) : null,
+        birthOrder: formData.get("birthOrder")
+          ? parseInt(formData.get("birthOrder") as string)
+          : null,
         ...(avatarUrl && { avatar: avatarUrl }),
       },
     });

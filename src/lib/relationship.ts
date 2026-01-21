@@ -15,11 +15,34 @@ interface RelationshipResult {
   pathDescription: string[]; // e.g. ["Bố", "Em trai"]
 }
 
+// Helper to determine if m1 is OLDER than m2
+function isOlder(m1: Member, m2: Member): boolean {
+  // 1. Prefer Birth Date
+  if (m1.birthDate && m2.birthDate) {
+    return new Date(m1.birthDate) < new Date(m2.birthDate);
+  }
+
+  // 2. Fallback to Birth Order
+  // Order 1 (First born) is Older than Order 2
+  if (
+    m1.birthOrder !== null &&
+    m1.birthOrder !== undefined &&
+    m2.birthOrder !== null &&
+    m2.birthOrder !== undefined
+  ) {
+    return m1.birthOrder < m2.birthOrder;
+  }
+
+  // 3. Default / Unknown: Assume not older (or treat as same/younger)
+  return false;
+}
+
 // Helper to get relative name based on path
+
 // This is a SIMPLIFIED version. Complex logic needs detailed rules.
 function inferRelationship(
   path: { member: Member; relationToPrev: RelationType }[],
-  target: Member
+  target: Member,
 ): string {
   // path[0] is source. path[last] is target.
   const steps = path.slice(1); // Remove source
@@ -72,17 +95,10 @@ function inferRelationship(
     // Siblings: Source -> Father/Mother -> Child
     if ((r1 === "FATHER" || r1 === "MOTHER") && r2 === "CHILD") {
       const source = path[0].member;
-      const sDate = source.birthDate ? new Date(source.birthDate) : null;
-      const tDate = target.birthDate ? new Date(target.birthDate) : null;
+      const isOlderMember = isOlder(target, source); // Target is Older than Source?
 
-      let isOlder = false;
-      // If dates available, compare. Else fallback?
-      if (sDate && tDate) {
-        isOlder = tDate < sDate; // Target born BEFORE Source -> Older
-      }
-
-      if (isMale) return isOlder ? "Anh trai" : "Em trai";
-      return isOlder ? "Chị gái" : "Em gái";
+      if (isMale) return isOlderMember ? "Anh trai" : "Em trai";
+      return isOlderMember ? "Chị gái" : "Em gái";
     }
 
     // --- In-laws ---
@@ -142,20 +158,16 @@ function inferRelationship(
       // Uncle/Aunt is target (step3.member) (passed as argument 'target')
 
       const parent = step1.member;
-      const pDate = parent.birthDate ? new Date(parent.birthDate) : null;
-      const tDate = target.birthDate ? new Date(target.birthDate) : null;
-
-      let isOlder = false;
-      // Logic: Target born BEFORE Parent -> Older -> Bác
-      if (pDate && tDate) isOlder = tDate < pDate;
+      // Logic: Target (Uncle/Aunt) Older than Parent -> Bác
+      const isOlderMember = isOlder(target, parent);
 
       if (r1 === "FATHER") {
         // Bên Nội: Anh/Chị của Bố là Bác. Em trai bố là Chú. Em gái bố là Cô.
-        if (isOlder) return isMale ? "Bác trai" : "Bác gái";
+        if (isOlderMember) return isMale ? "Bác trai" : "Bác gái";
         return isMale ? "Chú" : "Cô";
       } else {
         // Bên Ngoại: Anh/Chị của mẹ. Miền Bắc gọi là Bác. Em trai mẹ là Cậu. Em gái mẹ là Dì.
-        if (isOlder) return isMale ? "Bác trai" : "Bác gái";
+        if (isOlderMember) return isMale ? "Bác trai" : "Bác gái";
         return isMale ? "Cậu" : "Dì";
       }
     }
@@ -198,10 +210,8 @@ function inferRelationship(
       // Determine what Step3 (Uncle/Aunt) is called
       const parent = step1.member;
       const uncleAunt = step3.member;
-      const pDate = parent.birthDate ? new Date(parent.birthDate) : null;
-      const uDate = uncleAunt.birthDate ? new Date(uncleAunt.birthDate) : null;
-      let isOlder = false;
-      if (pDate && uDate) isOlder = uDate < pDate;
+
+      const isOlderMember = isOlder(uncleAunt, parent);
 
       const isInternalMale =
         uncleAunt.gender?.toLowerCase() === "male" ||
@@ -211,7 +221,7 @@ function inferRelationship(
       // Logic mapping:
       if (r1 === "FATHER") {
         // Nội
-        if (isOlder) {
+        if (isOlderMember) {
           return isTargetMale ? "Bác rể (Dượng)" : "Bác dâu";
         }
         // Younger
@@ -219,7 +229,7 @@ function inferRelationship(
         return "Dượng"; // Cô -> Dượng
       } else {
         // Ngoại
-        if (isOlder) {
+        if (isOlderMember) {
           return isTargetMale ? "Bác rể (Dượng)" : "Mợ (Bác dâu)";
         }
         // Younger
@@ -239,20 +249,12 @@ function inferRelationship(
       const parentA = step1.member;
       const parentTarget = step3.member;
 
-      const pADate = parentA.birthDate ? new Date(parentA.birthDate) : null;
-      const pTDate = parentTarget.birthDate
-        ? new Date(parentTarget.birthDate)
-        : null;
-
       // Logic: "Con chú con bác", "Con chị con em"
       // So sánh tuổi của Cha/Mẹ hai bên.
       // Ai là con của người "lớn hơn" thì làm Anh/Chị.
       // (Luật phổ biến: Con Bác > Con Chú. Con Anh > Con Em).
 
-      let parentAIsOlder = false;
-      if (pADate && pTDate) {
-        parentAIsOlder = pADate < pTDate; // Date nhỏ hơn là sinh trước -> Older
-      }
+      const parentAIsOlder = isOlder(parentA, parentTarget);
 
       // Nếu Cha/Mẹ A lớn hơn Cha/Mẹ Target -> A làm Anh/Chị.
       // A gọi Target là "Em họ".
@@ -292,14 +294,8 @@ function inferRelationship(
       const parentCousin = step3.member;
       const cousin = step4.member; // The cousin
 
-      const pADate = parentA.birthDate ? new Date(parentA.birthDate) : null;
-      const pCDate = parentCousin.birthDate
-        ? new Date(parentCousin.birthDate)
-        : null;
-
       // 1. Determine Cousin Relation (Anh/Chị vs Em)
-      let aIsOlderVaiVe = false;
-      if (pADate && pCDate) aIsOlderVaiVe = pADate < pCDate; // Parent A older -> A is Anh/Chi
+      const aIsOlderVaiVe = isOlder(parentA, parentCousin); // Parent A older -> A is Anh/Chi
 
       const isTargetMale = isMale; // Spouse gender (Target)
 
@@ -344,7 +340,7 @@ function inferRelationship(
 
 export async function findRelationship(
   sourceId: string,
-  targetId: string
+  targetId: string,
 ): Promise<RelationshipResult | null> {
   // 1. Load all members to build graph in memory (efficient for < 5000 members)
   const members = await db.member.findMany({

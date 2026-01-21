@@ -28,6 +28,7 @@ model Member {
   birthDate   DateTime?
   deathDate   DateTime?
   birthPlace  String?
+  birthOrder  Int?      // Thứ tự sinh trong anh chị em ruột, dùng để xác định vai vế khi không có năm sinh
   avatar      String?   // Đường dẫn ảnh
   bio         String?
   occupation  String?
