@@ -96,3 +96,14 @@ docker run -d \
  dangnam141002/z-ancestor:latest
 
 docker exec -it z-ancestor node prisma/seed.js
+
+docker run \
+ --name z-ancestor \
+ -p 80:8080 \
+ -v $(pwd)/production.db:/app/data/production.db \
+ -e DATABASE_URL=file:/app/data/production.db \
+ -e ADMIN_PIN=123456 \
+ -e NODE_ENV=production \
+ -e HOSTNAME=0.0.0.0 \
+ --restart unless-stopped \
+ dangnam141002/z-ancestor:latest

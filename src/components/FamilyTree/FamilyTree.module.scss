@@ -89,7 +89,8 @@
   margin-top: 0.5rem;
   background-color: white;
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid #e7e5e4; /* stone-200 */
   overflow: hidden;
@@ -183,7 +184,8 @@
   &:hover {
     transform: translateY(-2px) scale(1.05);
     background: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25),
+    box-shadow:
+      0 12px 40px 0 rgba(31, 38, 135, 0.25),
       0 0 0 4px rgba(168, 162, 158, 0.1);
   }
 
@@ -232,4 +234,131 @@
 
 .homeButton:hover .homeButtonTooltip {
   opacity: 1;
+}
+
+.relationshipBtn {
+  margin-right: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.5rem;
+  background-color: #e0f2fe; /* sky-100 */
+  color: #0369a1; /* sky-700 */
+  border: 1px solid #7dd3fc; /* sky-300 */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockBtn {
+  margin-right: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .toolbar {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-gap: 0.5rem;
+    pointer-events: none;
+    align-items: center; /* Align items vertically in their rows */
+  }
+
+  /* Make home button accessible */
+  .toolbar > div:first-child {
+    pointer-events: auto;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .actions {
+    display: contents; /* Flattens the div so children become grid items */
+    pointer-events: auto;
+  }
+
+  .searchContainer {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    order: unset; /* Remove order from previous implementation */
+    margin-bottom: 0;
+  }
+
+  .searchInputWrapper {
+    width: 100%;
+
+    &:focus-within {
+      width: 100%;
+    }
+  }
+
+  /* Stack buttons in the first column, below the home button */
+  .relationshipBtn {
+    grid-column: 1;
+    grid-row: 2;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+    width: 3rem;
+    height: 3rem;
+    justify-self: center;
+  }
+
+  .lockBtn {
+    grid-column: 1;
+    grid-row: 3;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+    width: 3rem;
+    height: 3rem;
+    justify-self: center;
+  }
+
+  .addBtn {
+    grid-column: 1;
+    grid-row: 4;
+    margin-right: 0;
+    width: 3rem;
+    height: 3rem;
+    justify-self: center;
+    padding: 0; /* Center the icon */
+    justify-content: center;
+    border-radius: 9999px; /* Ensure circular */
+  }
+
+  .addBtnText {
+    display: none;
+  }
+}
+
+.betaDisclaimer {
+  position: fixed;
+  bottom: 0.625rem; /* 10px */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem; /* 12px */
+  color: #525252; /* neutral-600 */
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.375rem 1rem; /* 6px 16px */
+  border-radius: 9999px;
+  z-index: 50;
+  pointer-events: none;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  text-align: center;
+  max-width: 90%;
+
+  /* Allow wrapping on small screens */
+  @media (max-width: 640px) {
+    white-space: normal;
+    width: max-content;
+    line-height: 1.4;
+    padding: 0.5rem 1rem;
+    bottom: 4rem; /* Move up slightly to avoid bottom navigation bars on phones if present, or just general breathing room */
+  }
 }

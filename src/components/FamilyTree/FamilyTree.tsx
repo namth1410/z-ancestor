@@ -50,7 +50,7 @@ const FamilyTree = ({
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"view" | "edit" | "create">(
-    "view"
+    "view",
   );
   const [drawerDefaultValues, setDrawerDefaultValues] = useState<
     Partial<Member>
@@ -174,7 +174,7 @@ const FamilyTree = ({
 
   const handleAddRelative = (
     type: "child" | "spouse" | "parent",
-    member: Member
+    member: Member,
   ) => {
     const defaults: Partial<Member> = {};
     if (type === "child") {
@@ -206,15 +206,7 @@ const FamilyTree = ({
           <button
             onClick={() => setIsRelationshipModalOpen(true)}
             title="Tra cứu quan hệ họ hàng"
-            style={{
-              marginRight: "0.5rem",
-              borderRadius: "9999px",
-              padding: "0.5rem",
-              backgroundColor: "#e0f2fe", // sky-100
-              color: "#0369a1", // sky-700
-              border: "1px solid #7dd3fc", // sky-300
-              cursor: "pointer",
-            }}
+            className={style.relationshipBtn}
           >
             <Users size={18} />
           </button>
@@ -225,13 +217,8 @@ const FamilyTree = ({
               isAdminUnlocked
                 ? "bg-amber-100 text-amber-700 border border-amber-300"
                 : "bg-stone-200 text-stone-500"
-            }`}
+            } ${style.lockBtn}`}
             title={isAdminUnlocked ? "Khóa chế độ sửa" : "Mở khóa chỉnh sửa"}
-            style={{
-              marginRight: "0.5rem",
-              borderRadius: "9999px",
-              padding: "0.5rem",
-            }}
           >
             {isAdminUnlocked ? <Unlock size={18} /> : <Lock size={18} />}
           </button>
@@ -271,8 +258,12 @@ const FamilyTree = ({
           </div>
 
           {isAdminUnlocked && (
-            <button className="btn btn-primary" onClick={handleAddMember}>
-              <Plus size={16} /> Thêm Người Mới
+            <button
+              className={`btn btn-primary ${style.addBtn}`}
+              onClick={handleAddMember}
+            >
+              <Plus size={16} />{" "}
+              <span className={style.addBtnText}>Thêm Người Mới</span>
             </button>
           )}
         </div>
@@ -344,25 +335,7 @@ const FamilyTree = ({
         initialSourceId={selectedMember?.id}
       />
 
-      <div
-        style={{
-          position: "fixed",
-          bottom: "10px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          fontSize: "12px",
-          color: "#666",
-          background: "rgba(255,255,255,0.85)",
-          padding: "6px 16px",
-          borderRadius: "99px",
-          zIndex: 50,
-          pointerEvents: "none",
-          whiteSpace: "nowrap",
-          backdropFilter: "blur(4px)",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-          border: "1px solid rgba(0,0,0,0.05)",
-        }}
-      >
+      <div className={style.betaDisclaimer}>
         🚧 Sản phẩm đang phát triển (Beta). Nếu có sai sót xin vui lòng lượng
         thứ hoặc liên hệ Admin.
       </div>
